@@ -3,7 +3,6 @@ import { AlertCircle, Sparkles, Settings as SettingsIcon, Sliders } from 'lucide
 
 // Components
 import { ImageUploader } from './components/ImageUploader';
-import { APISelector } from './components/APISelector';
 import { OccasionSelector } from './components/OccasionSelector';
 import { QualitySettings } from './components/QualitySettings';
 import { GenerateButton } from './components/GenerateButton';
@@ -35,7 +34,7 @@ function App() {
 
   // State
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
-  const [selectedAPI, setSelectedAPI] = useState<string>('openai'); // Default to OpenAI
+  const selectedAPI = 'openai'; // Fixed to OpenAI (API selection available in Settings)
   const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
   const [selectedQuality, setSelectedQuality] = useState<string>(DEFAULT_QUALITY_PRESET);
   const [generatedImage, setGeneratedImage] = useState<GeneratedImage | null>(null);
@@ -110,39 +109,6 @@ function App() {
   const handleImagesUploaded = (images: UploadedImage[]) => {
     setUploadedImages(images);
     setError(null);
-  };
-
-  // Handle API selection and re-verify authentication
-  const handleSelectAPI = async (apiId: string) => {
-    setSelectedAPI(apiId);
-    setError(null);
-
-    // Re-verify the API authentication when selected
-    const apiKey = localStorage.getItem(`api_key_${apiId}`);
-    if (apiKey) {
-      try {
-        const api = getAPI(apiId);
-        const isValid = await api.authenticate(apiKey);
-
-        setApiStatus(prev => ({
-          ...prev,
-          [apiId]: {
-            available: isValid,
-            authenticated: isValid
-          }
-        }));
-      } catch (err) {
-        console.error(`Failed to verify ${apiId}:`, err);
-        setApiStatus(prev => ({
-          ...prev,
-          [apiId]: {
-            available: false,
-            authenticated: false
-          }
-        }));
-        setError('Failed to authenticate with API. Please check your API key.');
-      }
-    }
   };
 
   // Handle occasion selection
@@ -331,16 +297,6 @@ function App() {
                 maxFileSize={10 * 1024 * 1024}
                 allowedFormats={['image/jpeg', 'image/png', 'image/webp']}
                 multipleUpload={false}
-              />
-            </div>
-
-            {/* API Selection */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <APISelector
-                apis={apiOptions}
-                selectedAPI={selectedAPI}
-                onSelectAPI={handleSelectAPI}
-                apiStatus={apiStatus}
               />
             </div>
 

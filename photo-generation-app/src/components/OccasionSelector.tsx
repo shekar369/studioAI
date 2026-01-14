@@ -90,7 +90,7 @@ export const OccasionSelector: React.FC<OccasionSelectorProps> = ({
       </div>
 
       {/* Occasions Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-96 overflow-y-auto pr-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
         {filteredOccasions.map((occasion) => {
           const isSelected = selectedOccasion === occasion.id;
 
@@ -99,31 +99,50 @@ export const OccasionSelector: React.FC<OccasionSelectorProps> = ({
               key={occasion.id}
               onClick={() => onSelectOccasion(occasion.id)}
               className={`
-                relative p-4 rounded-lg border-2 text-left transition-all
+                relative p-4 rounded-lg border-2 text-left transition-all group
                 ${isSelected
-                  ? 'border-primary-500 bg-primary-50 shadow-md'
-                  : 'border-gray-200 hover:border-primary-300 hover:shadow-sm'
+                  ? 'border-primary-500 bg-gradient-to-br from-primary-50 to-primary-100 shadow-lg scale-[1.02]'
+                  : 'border-gray-200 hover:border-primary-300 hover:shadow-md hover:scale-[1.01] bg-white'
                 }
               `}
             >
-              {/* Icon */}
-              <div className="text-4xl mb-2">{occasion.icon}</div>
+              <div className="flex items-start space-x-3">
+                {/* Icon */}
+                <div className={`text-5xl transition-transform ${isSelected ? 'scale-110' : 'group-hover:scale-110'}`}>
+                  {occasion.icon}
+                </div>
 
-              {/* Name */}
-              <h4 className="font-medium text-gray-900 text-sm mb-1 line-clamp-1">
-                {occasion.name}
-              </h4>
+                <div className="flex-1 min-w-0">
+                  {/* Name */}
+                  <h4 className={`font-semibold text-base mb-1 line-clamp-1 ${isSelected ? 'text-primary-900' : 'text-gray-900'}`}>
+                    {occasion.name}
+                  </h4>
 
-              {/* Description */}
-              <p className="text-xs text-gray-500 line-clamp-2">
-                {occasion.description}
-              </p>
+                  {/* Description */}
+                  <p className={`text-xs mb-2 line-clamp-2 ${isSelected ? 'text-primary-700' : 'text-gray-500'}`}>
+                    {occasion.description}
+                  </p>
+
+                  {/* Category Badge */}
+                  <span className={`
+                    inline-block text-xs px-2 py-1 rounded-full font-medium
+                    ${occasion.category === 'celebration' ? 'bg-pink-100 text-pink-700' :
+                      occasion.category === 'professional' ? 'bg-blue-100 text-blue-700' :
+                      occasion.category === 'lifestyle' ? 'bg-green-100 text-green-700' :
+                      occasion.category === 'seasonal' ? 'bg-orange-100 text-orange-700' :
+                      'bg-purple-100 text-purple-700'
+                    }
+                  `}>
+                    {occasion.category}
+                  </span>
+                </div>
+              </div>
 
               {/* Selected Indicator */}
               {isSelected && (
-                <div className="absolute top-2 right-2 w-5 h-5 bg-primary-500 rounded-full flex items-center justify-center">
+                <div className="absolute top-3 right-3 w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center shadow-md">
                   <svg
-                    className="w-3 h-3 text-white"
+                    className="w-4 h-4 text-white"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -135,21 +154,6 @@ export const OccasionSelector: React.FC<OccasionSelectorProps> = ({
                   </svg>
                 </div>
               )}
-
-              {/* Category Badge */}
-              <div className="mt-2">
-                <span className={`
-                  text-xs px-2 py-0.5 rounded-full
-                  ${occasion.category === 'celebration' ? 'bg-pink-100 text-pink-700' :
-                    occasion.category === 'professional' ? 'bg-blue-100 text-blue-700' :
-                    occasion.category === 'lifestyle' ? 'bg-green-100 text-green-700' :
-                    occasion.category === 'seasonal' ? 'bg-orange-100 text-orange-700' :
-                    'bg-purple-100 text-purple-700'
-                  }
-                `}>
-                  {occasion.category}
-                </span>
-              </div>
             </button>
           );
         })}
