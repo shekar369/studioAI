@@ -80,34 +80,90 @@ export class OpenAIAPI implements ImageGenerationAPI {
         });
 
         if (!response.ok) {
+          const errorBody = await response.text();
+          console.error('OpenAI API Error Response:', errorBody);
           throw await createErrorFromResponse(response, this.name);
         }
 
         const result = await response.json();
-        console.log('OpenAI response:', result);
+        console.log('OpenAI Full Response:', JSON.stringify(result, null, 2));
+
+        if (result.data && result.data.length > 0) {
+          console.log('First data item:', JSON.stringify(result.data[0], null, 2));
+          console.log('Available fields:', Object.keys(result.data[0]));
+        }
+
         return result;
       });
 
-      // Get the URL from response
-      const imageUrl = data.data[0].url;
-
-      // Fetch the image and convert to blob to avoid CORS issues
-      const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to fetch generated image: ${imageResponse.status}`);
+      // Check what we got in the data array
+      if (!data.data || data.data.length === 0) {
+        console.error('No data in OpenAI response:', data);
+        throw new Error('OpenAI response has no data array');
       }
 
-      const blob = await imageResponse.blob();
+      const imageData = data.data[0];
+      console.log('Image data object:', imageData);
 
-      // Verify blob is valid
+      // Check if we have base64 data or URL
+      let blob: Blob;
+
+      if (imageData.b64_json) {
+        // Base64 encoded image
+        console.log('Processing base64 image data...');
+        const base64Data = imageData.b64_json;
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        blob = new Blob([bytes], { type: 'image/png' });
+        console.log('Base64 blob created:', { size: blob.size, type: blob.type });
+      } else if (imageData.url) {
+        // URL-based image
+        console.log('Fetching image from URL:', imageData.url);
+        const imageResponse = await fetch(imageData.url);
+
+        console.log('Image fetch response:', {
+          status: imageResponse.status,
+          contentType: imageResponse.headers.get('content-type'),
+          ok: imageResponse.ok
+        });
+
+        if (!imageResponse.ok) {
+          const errorText = await imageResponse.text();
+          console.error('Failed to fetch image. Response:', errorText);
+          throw new Error(`Failed to fetch generated image: ${imageResponse.status}`);
+        }
+
+        blob = await imageResponse.blob();
+
+        console.log('Image blob created from URL:', {
+          size: blob.size,
+          type: blob.type
+        });
+
+        // Verify blob is valid image
+        if (blob.size === 0) {
+          throw new Error('Generated image is empty');
+        }
+
+        if (!blob.type.startsWith('image/')) {
+          // Not an image! Log the content to see what we got
+          const text = await blob.text();
+          console.error('Received non-image blob. Content:', text.substring(0, 500));
+          throw new Error(`Expected image but got ${blob.type}. Check if API URL has expired or requires auth.`);
+        }
+      } else {
+        // Neither URL nor base64 - error
+        console.error('No image data found. Available fields:', Object.keys(imageData));
+        throw new Error('OpenAI response contains no url or b64_json field');
+      }
+
+      // Verify final blob is valid
       if (blob.size === 0) {
         throw new Error('Generated image is empty');
       }
-
-      console.log('Image blob created:', {
-        size: blob.size,
-        type: blob.type
-      });
 
       const url = URL.createObjectURL(blob);
 
