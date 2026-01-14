@@ -123,13 +123,30 @@ ${birthdayOccasion.basePrompt}
   };
 
   // Download generated image
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!generatedImage) return;
 
-    const link = document.createElement('a');
-    link.href = generatedImage.url;
-    link.download = `birthday-photo-${Date.now()}.png`;
-    link.click();
+    try {
+      // Use the blob directly for better compatibility
+      if (generatedImage.blob) {
+        const url = URL.createObjectURL(generatedImage.blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `birthday-photo-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else {
+        const link = document.createElement('a');
+        link.href = generatedImage.url;
+        link.download = `birthday-photo-${Date.now()}.png`;
+        link.click();
+      }
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download. Try right-clicking the image and "Save image as..."');
+    }
   };
 
   return (

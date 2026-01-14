@@ -69,6 +69,7 @@ export class OpenAIAPI implements ImageGenerationAPI {
       const data = await executeWithRetry(async () => {
         console.log('Editing image with OpenAI gpt-image-1...');
         console.log('Prompt:', prompt);
+        console.log('Size:', size);
 
         const response = await fetch(`${this.baseURL}/images/edits`, {
           method: 'POST',
@@ -82,7 +83,9 @@ export class OpenAIAPI implements ImageGenerationAPI {
           throw await createErrorFromResponse(response, this.name);
         }
 
-        return await response.json();
+        const result = await response.json();
+        console.log('OpenAI response:', result);
+        return result;
       });
 
       // Get the URL from response
@@ -90,7 +93,22 @@ export class OpenAIAPI implements ImageGenerationAPI {
 
       // Fetch the image and convert to blob to avoid CORS issues
       const imageResponse = await fetch(imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to fetch generated image: ${imageResponse.status}`);
+      }
+
       const blob = await imageResponse.blob();
+
+      // Verify blob is valid
+      if (blob.size === 0) {
+        throw new Error('Generated image is empty');
+      }
+
+      console.log('Image blob created:', {
+        size: blob.size,
+        type: blob.type
+      });
+
       const url = URL.createObjectURL(blob);
 
       const [width, height] = size.split('x').map(Number);

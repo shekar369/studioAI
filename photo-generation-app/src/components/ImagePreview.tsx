@@ -8,15 +8,33 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
   generatedImage,
   comparisonMode
 }) => {
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!generatedImage) return;
 
-    const link = document.createElement('a');
-    link.href = generatedImage.url;
-    link.download = `generated-${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // If we have a blob, use it directly
+      if (generatedImage.blob) {
+        const url = URL.createObjectURL(generatedImage.blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `studio-ai-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else {
+        // Fallback to URL
+        const link = document.createElement('a');
+        link.href = generatedImage.url;
+        link.download = `studio-ai-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download image. Please try right-clicking the image and selecting "Save image as..."');
+    }
   };
 
   return (
@@ -63,6 +81,13 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
                     src={generatedImage.url}
                     alt="Generated"
                     className="w-full h-auto rounded-lg"
+                    onError={() => {
+                      console.error('Image load error - Generated image details:', generatedImage);
+                      console.error('Blob info:', { size: generatedImage.blob?.size, type: generatedImage.blob?.type });
+                    }}
+                    onLoad={() => {
+                      console.log('Image loaded successfully!');
+                    }}
                   />
                 </div>
               </div>
