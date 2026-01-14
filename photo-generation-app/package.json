@@ -1,7 +1,14 @@
 {
-  "name": "photo-generation-app",
+  "name": "studio-ai",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Hyper-realistic photo generation with AI-powered face preservation",
+  "author": "Shekar <shekar369@github.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shekar369/studioAI.git"
+  },
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
