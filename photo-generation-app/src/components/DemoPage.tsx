@@ -100,10 +100,11 @@ ${birthdayOccasion.basePrompt}
       console.log('Prompt:', prompt);
 
       // Use generateImage with source image for editing
+      // OpenAI gpt-image-1 supports: 1024x1024, 1024x1536, 1536x1024
       const result = await openaiAPI.generateImage({
         prompt,
         width: 1024,
-        height: 1024,
+        height: 1024, // Square format for best compatibility
         steps: 50,
         guidanceScale: 7,
         numImages: 1,

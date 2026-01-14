@@ -159,4 +159,5 @@ export const getResolutionPresetById = (id: string): ResolutionPreset | undefine
 
 // Default preset IDs
 export const DEFAULT_QUALITY_PRESET = 'standard';
-export const DEFAULT_RESOLUTION_PRESET = 'fullhd';
+// Changed to square-1k for OpenAI gpt-image-1 compatibility (supports 1024x1024, 1024x1536, 1536x1024)
+export const DEFAULT_RESOLUTION_PRESET = 'square-1k';

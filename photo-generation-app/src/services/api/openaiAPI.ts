@@ -135,7 +135,23 @@ export class OpenAIAPI implements ImageGenerationAPI {
 
     // If source image is provided, use edit endpoint for face preservation
     if (sourceImage) {
-      const size = `${config.width || 1024}x${config.height || 1024}`;
+      // gpt-image-1 only supports specific sizes
+      // Supported: 1024x1024, 1024x1536, 1536x1024
+      let size = '1024x1024'; // Default square
+
+      const aspectRatio = config.width / config.height;
+
+      if (aspectRatio > 1.2) {
+        // Landscape - use 1536x1024
+        size = '1536x1024';
+      } else if (aspectRatio < 0.8) {
+        // Portrait - use 1024x1536
+        size = '1024x1536';
+      } else {
+        // Square or close to square - use 1024x1024
+        size = '1024x1024';
+      }
+
       return this.editImage(sourceImage, config.prompt, size);
     }
 
