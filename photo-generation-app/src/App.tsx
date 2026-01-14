@@ -348,8 +348,47 @@ function App() {
                 </div>
               )}
 
+              {/* Download Button - Shows after successful generation */}
+              {generatedImage && !error && (
+                <button
+                  onClick={() => {
+                    if (!generatedImage) return;
+                    try {
+                      // Download using blob if available
+                      if (generatedImage.blob) {
+                        const url = URL.createObjectURL(generatedImage.blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `studio-ai-${Date.now()}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                      } else {
+                        // Fallback to URL
+                        const link = document.createElement('a');
+                        link.href = generatedImage.url;
+                        link.download = `studio-ai-${Date.now()}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }
+                    } catch (err) {
+                      console.error('Download failed:', err);
+                      alert('Failed to download image. Please try right-clicking the image and selecting "Save image as..."');
+                    }
+                  }}
+                  className="mt-4 w-full flex items-center justify-center space-x-2 px-4 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                >
+                  <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  <span>Download Generated Image</span>
+                </button>
+              )}
+
               {/* Info */}
-              {!error && (
+              {!error && !generatedImage && (
                 <div className="mt-4 text-xs text-gray-600 space-y-1">
                   {!uploadedImages.length && (
                     <p>• Upload an image to get started</p>
@@ -363,6 +402,14 @@ function App() {
                   {canGenerate && (
                     <p className="text-green-600">✓ Ready to generate!</p>
                   )}
+                </div>
+              )}
+
+              {/* Success Message */}
+              {generatedImage && !error && (
+                <div className="mt-4 text-xs text-green-600 space-y-1">
+                  <p>✓ Image generated successfully!</p>
+                  <p>• Click the button above to download</p>
                 </div>
               )}
             </div>
