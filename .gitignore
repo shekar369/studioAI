@@ -1,42 +1,100 @@
 # Dependencies
 node_modules/
 package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # Build outputs
 dist/
 build/
 .vite/
+*.tsbuildinfo
 
 # Environment variables
 .env
 .env.local
+.env.development
+.env.development.local
+.env.test.local
 .env.production
+.env.production.local
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # Editor directories and files
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sw?
 *~
-.DS_Store
+*.sublime-workspace
+*.sublime-project
 
-# OS
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
 # Temporary files
 *.tmp
+*.temp
 .cache/
 .temp/
+tmp/
+temp/
 
 # Test coverage
 coverage/
+.nyc_output/
 
 # Local development
 .local/
+*.local
+
+# Claude Code AI assistant files
+.claude/
+nul
+
+# TypeScript cache
+*.tsbuildinfo
+
+# ESLint cache
+.eslintcache
+
+# Prettier cache
+.prettiercache
+
+# Debug files
+*.map
+
+# Optional npm cache directory
+.npm/
+
+# Optional eslint cache
+.eslintcache
+
+# Storybook build outputs
+storybook-static/
+
+# Playwright
+playwright-report/
+playwright/.cache/
+
+# Misc
+*.pem
+*.key
+.vercel
+.netlify

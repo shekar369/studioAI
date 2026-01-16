@@ -1,9 +1,11 @@
 import React, { useCallback, useState } from 'react';
-import { Upload, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Upload, X, ImageIcon, Loader2 } from 'lucide-react';
 import type { ImageUploaderProps } from '../types/ui.types';
 import type { UploadedImage } from '../types/generation.types';
 import { validateImageFile } from '../utils/validation';
 import { getImageDimensions, createThumbnail, formatFileSize } from '../utils/imageUtils';
+import { fadeInUp, staggerContainer, staggerItem } from '../utils/animations';
 
 export const ImageUploader: React.FC<ImageUploaderProps> = ({
   onImagesUploaded,
@@ -17,7 +19,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const processFile = async (file: File): Promise<UploadedImage | null> => {
-    // Validate file
     const validation = validateImageFile(file);
     if (!validation.valid) {
       setError(validation.error || 'Invalid file');
@@ -25,13 +26,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
 
     try {
-      // Get image dimensions
       const dimensions = await getImageDimensions(file);
-
-      // Create preview
       const preview = await createThumbnail(file, 300);
-
-      // Convert file to blob
       const blob = new Blob([await file.arrayBuffer()], { type: file.type });
 
       const uploadedImage: UploadedImage = {
@@ -104,21 +100,39 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Upload Zone */}
-      <div
+    <motion.div
+      className="space-y-4"
+      initial="initial"
+      animate="animate"
+      variants={fadeInUp}
+    >
+      {/* Upload Zone - Premium Dark Theme */}
+      <motion.div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`
-          border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-          transition-all duration-200
+          relative overflow-hidden
+          border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer
+          transition-all duration-300
           ${isDragging
-            ? 'border-primary-500 bg-primary-50'
-            : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
+            ? 'border-electric-purple-500 bg-electric-purple-500/10 shadow-glow'
+            : 'border-studio-600 hover:border-electric-purple-400 bg-studio-900/50 hover:bg-studio-800/50'
           }
         `}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+        animate={isDragging ? { borderColor: ['#7c3aed', '#3b82f6', '#7c3aed'] } : {}}
+        transition={{ duration: 2, repeat: isDragging ? Infinity : 0 }}
       >
+        {/* Animated Background Glow */}
+        <div className={`
+          absolute inset-0 opacity-0 transition-opacity duration-500
+          ${isDragging ? 'opacity-100' : ''}
+        `}>
+          <div className="absolute inset-0 bg-gradient-radial from-electric-purple-500/20 via-transparent to-transparent" />
+        </div>
+
         <input
           type="file"
           id="file-upload"
@@ -129,73 +143,126 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           disabled={isProcessing}
         />
 
-        <label htmlFor="file-upload" className="cursor-pointer">
+        <label htmlFor="file-upload" className="cursor-pointer relative z-10">
           <div className="flex flex-col items-center space-y-4">
-            <div className={`
-              w-16 h-16 rounded-full flex items-center justify-center
-              ${isDragging ? 'bg-primary-500' : 'bg-gray-200'}
-            `}>
-              <Upload className={`w-8 h-8 ${isDragging ? 'text-white' : 'text-gray-500'}`} />
-            </div>
+            {/* Upload Icon with Animation */}
+            <motion.div
+              className={`
+                w-20 h-20 rounded-2xl flex items-center justify-center
+                transition-all duration-300
+                ${isDragging
+                  ? 'bg-gradient-to-br from-electric-purple-500 to-electric-blue-500 shadow-glow'
+                  : 'bg-studio-800 border border-studio-600'
+                }
+              `}
+              animate={isDragging ? { y: [0, -8, 0] } : {}}
+              transition={{ duration: 1.5, repeat: isDragging ? Infinity : 0 }}
+            >
+              {isProcessing ? (
+                <Loader2 className="w-10 h-10 text-electric-purple-400 animate-spin" />
+              ) : (
+                <Upload className={`w-10 h-10 transition-colors duration-300 ${
+                  isDragging ? 'text-white' : 'text-studio-400'
+                }`} />
+              )}
+            </motion.div>
 
-            <div>
-              <p className="text-lg font-medium text-gray-700">
+            <div className="space-y-2">
+              <p className={`text-lg font-semibold transition-colors duration-300 ${
+                isDragging ? 'text-white' : 'text-gray-200'
+              }`}>
                 {isDragging ? 'Drop your image here' : 'Drop image or click to upload'}
               </p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-studio-400">
                 Supports JPG, PNG, WEBP, HEIC • Max {formatFileSize(maxFileSize)}
               </p>
             </div>
 
             {isProcessing && (
-              <div className="text-primary-600 text-sm">Processing...</div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center space-x-2 text-electric-purple-400"
+              >
+                <div className="w-2 h-2 rounded-full bg-electric-purple-500 animate-pulse" />
+                <span className="text-sm font-medium">Processing image...</span>
+              </motion.div>
             )}
           </div>
         </label>
-      </div>
+      </motion.div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start">
-          <X className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-          <span className="text-sm">{error}</span>
-        </div>
-      )}
+      {/* Error Message - Dark Theme */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl flex items-start backdrop-blur-sm"
+          >
+            <X className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+            <span className="text-sm">{error}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Uploaded Images Preview */}
-      {uploadedImages.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-700">Uploaded Images</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {uploadedImages.map((image) => (
-              <div
-                key={image.id}
-                className="relative group rounded-lg overflow-hidden border border-gray-200 hover:border-primary-400 transition-colors"
-              >
-                <img
-                  src={image.preview}
-                  alt="Uploaded"
-                  className="w-full h-32 object-cover"
-                />
-
-                {/* Remove Button */}
-                <button
-                  onClick={() => removeImage(image.id)}
-                  className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
+      {/* Uploaded Images Preview - Dark Theme */}
+      <AnimatePresence>
+        {uploadedImages.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="space-y-3"
+          >
+            <h3 className="text-sm font-semibold text-gray-300 flex items-center">
+              <ImageIcon className="w-4 h-4 mr-2 text-electric-purple-400" />
+              Uploaded Images
+            </h3>
+            <motion.div
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+              variants={staggerContainer}
+              initial="initial"
+              animate="animate"
+            >
+              {uploadedImages.map((image) => (
+                <motion.div
+                  key={image.id}
+                  variants={staggerItem}
+                  className="relative group rounded-xl overflow-hidden border border-studio-700 hover:border-electric-purple-500/50 transition-all duration-300 bg-studio-850"
+                  whileHover={{ scale: 1.02, boxShadow: '0 0 20px rgba(124, 58, 237, 0.2)' }}
                 >
-                  <X className="w-4 h-4" />
-                </button>
+                  <img
+                    src={image.preview}
+                    alt="Uploaded"
+                    className="w-full h-32 object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
 
-                {/* Image Info */}
-                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p>{image.width} × {image.height}</p>
-                  <p>{formatFileSize(image.size)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-studio-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                  {/* Remove Button */}
+                  <motion.button
+                    onClick={() => removeImage(image.id)}
+                    className="absolute top-2 right-2 w-7 h-7 bg-red-500/80 backdrop-blur-sm text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center hover:bg-red-500 shadow-lg"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <X className="w-4 h-4" />
+                  </motion.button>
+
+                  {/* Image Info */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-studio-950/90 backdrop-blur-sm text-white p-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <p className="text-gray-300">{image.width} × {image.height}</p>
+                    <p className="text-electric-purple-400">{formatFileSize(image.size)}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
