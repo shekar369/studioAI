@@ -1,6 +1,8 @@
 import React from 'react';
-import { Clock, DollarSign, Zap, Star } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Clock, DollarSign, Zap, Star, Check, Sparkles, Info } from 'lucide-react';
 import type { QualitySettingsProps } from '../types/ui.types';
+import { fadeInUp, staggerContainer, staggerItem } from '../utils/animations';
 
 export const QualitySettings: React.FC<QualitySettingsProps> = ({
   presets,
@@ -10,148 +12,207 @@ export const QualitySettings: React.FC<QualitySettingsProps> = ({
   // Get quality level icon based on preset
   const getQualityIcon = (presetId: string) => {
     switch(presetId) {
-      case 'draft': return <Zap className="w-4 h-4 text-yellow-500" />;
-      case 'standard': return <Star className="w-4 h-4 text-blue-500" />;
-      case 'high': return <Star className="w-4 h-4 text-purple-500" />;
-      case 'ultra': return <Star className="w-4 h-4 text-pink-500" />;
-      case 'maximum': return <Star className="w-4 h-4 text-red-500" />;
-      default: return <Star className="w-4 h-4 text-gray-500" />;
+      case 'draft': return <Zap className="w-4 h-4 text-yellow-400" />;
+      case 'standard': return <Star className="w-4 h-4 text-green-400" />;
+      case 'high': return <Star className="w-4 h-4 text-electric-purple-400" />;
+      case 'ultra': return <Sparkles className="w-4 h-4 text-pink-400" />;
+      case 'maximum': return <Sparkles className="w-4 h-4 text-red-400" />;
+      default: return <Star className="w-4 h-4 text-studio-400" />;
     }
   };
 
-  // Get recommendation badge
+  // Get recommendation badge - Dark Theme
   const getRecommendation = (presetId: string) => {
     switch(presetId) {
-      case 'draft': return { text: 'Quick Test', color: 'bg-yellow-100 text-yellow-700' };
-      case 'standard': return { text: 'Recommended', color: 'bg-green-100 text-green-700' };
-      case 'high': return { text: 'High Quality', color: 'bg-purple-100 text-purple-700' };
-      case 'ultra': return { text: 'Professional', color: 'bg-pink-100 text-pink-700' };
-      case 'maximum': return { text: 'Maximum', color: 'bg-red-100 text-red-700' };
+      case 'draft': return { text: 'Quick Test', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' };
+      case 'standard': return { text: 'Recommended', color: 'bg-green-500/20 text-green-400 border-green-500/30' };
+      case 'high': return { text: 'High Quality', color: 'bg-electric-purple-500/20 text-electric-purple-400 border-electric-purple-500/30' };
+      case 'ultra': return { text: 'Professional', color: 'bg-pink-500/20 text-pink-400 border-pink-500/30' };
+      case 'maximum': return { text: 'Maximum', color: 'bg-red-500/20 text-red-400 border-red-500/30' };
       default: return null;
     }
   };
 
+  // Get gradient color for quality bars
+  const getBarGradient = (presetId: string) => {
+    switch(presetId) {
+      case 'draft': return 'from-yellow-500 to-orange-500';
+      case 'standard': return 'from-green-500 to-emerald-500';
+      case 'high': return 'from-electric-purple-500 to-electric-blue-500';
+      case 'ultra': return 'from-pink-500 to-rose-500';
+      case 'maximum': return 'from-red-500 to-orange-500';
+      default: return 'from-studio-500 to-studio-400';
+    }
+  };
+
   return (
-    <div className="space-y-3">
+    <motion.div
+      className="space-y-4"
+      initial="initial"
+      animate="animate"
+      variants={fadeInUp}
+    >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-700">Quality Settings</h3>
-        <span className="text-xs text-gray-500">{presets.length} presets</span>
+        <h3 className="text-sm font-semibold text-gray-200 flex items-center">
+          <Sparkles className="w-4 h-4 mr-2 text-electric-purple-400" />
+          Quality Settings
+        </h3>
+        <span className="text-xs text-studio-400 bg-studio-800 px-2 py-1 rounded-full">
+          {presets.length} presets
+        </span>
       </div>
 
-      <div className="space-y-2">
+      <motion.div
+        className="space-y-2"
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
         {presets.map((preset) => {
           const isSelected = selectedPreset === preset.id;
           const recommendation = getRecommendation(preset.id);
+          const barGradient = getBarGradient(preset.id);
 
           return (
-            <button
+            <motion.button
               key={preset.id}
               onClick={() => onSelectPreset(preset.id)}
+              variants={staggerItem}
               className={`
-                w-full p-4 rounded-lg border-2 text-left transition-all group
+                w-full p-4 rounded-xl border-2 text-left transition-all duration-300 group relative overflow-hidden
                 ${isSelected
-                  ? 'border-primary-500 bg-gradient-to-br from-primary-50 to-primary-100 shadow-lg scale-[1.02]'
-                  : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50 hover:shadow-md'
+                  ? 'border-electric-purple-500 bg-electric-purple-500/10 shadow-glow'
+                  : 'border-studio-700 hover:border-electric-purple-400/50 bg-studio-850 hover:bg-studio-800'
                 }
               `}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
             >
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  {getQualityIcon(preset.id)}
-                  <div>
-                    <h4 className={`font-semibold ${isSelected ? 'text-primary-900' : 'text-gray-900'}`}>
-                      {preset.name}
-                    </h4>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {preset.steps} steps • {preset.samplerMethod}
-                    </p>
+              {/* Subtle gradient overlay on hover */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-electric-purple-500/5 via-transparent to-electric-blue-500/5 pointer-events-none" />
+
+              <div className="relative z-10">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <div className={`
+                      w-10 h-10 rounded-lg flex items-center justify-center
+                      ${isSelected
+                        ? 'bg-gradient-to-br from-electric-purple-500 to-electric-blue-500 shadow-glow-sm'
+                        : 'bg-studio-800 border border-studio-600'
+                      }
+                    `}>
+                      {getQualityIcon(preset.id)}
+                    </div>
+                    <div>
+                      <h4 className={`font-semibold text-base transition-colors ${
+                        isSelected ? 'text-white' : 'text-gray-200'
+                      }`}>
+                        {preset.name}
+                      </h4>
+                      <p className="text-xs text-studio-400 mt-0.5">
+                        {preset.steps} steps • {preset.samplerMethod}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    {recommendation && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${recommendation.color}`}>
+                        {recommendation.text}
+                      </span>
+                    )}
+                    <AnimatePresence>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          className="w-6 h-6 bg-gradient-to-br from-electric-purple-500 to-electric-blue-500 rounded-full flex items-center justify-center shadow-glow-sm"
+                        >
+                          <Check className="w-4 h-4 text-white" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  {recommendation && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${recommendation.color}`}>
-                      {recommendation.text}
-                    </span>
-                  )}
-                  {isSelected && (
-                    <div className="w-5 h-5 bg-primary-500 rounded-full flex items-center justify-center shadow-md">
-                      <svg
-                        className="w-3 h-3 text-white"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-              </div>
+                <div className="flex items-center space-x-4 text-xs text-studio-400 mb-3">
+                  <div className="flex items-center space-x-1.5 bg-studio-800/50 px-2 py-1 rounded-md">
+                    <Clock className="w-3 h-3" />
+                    <span className="font-medium text-gray-300">{preset.estimatedTime}</span>
+                  </div>
 
-              <div className="flex items-center space-x-4 text-xs text-gray-600 mb-3">
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3" />
-                  <span className="font-medium">{preset.estimatedTime}</span>
+                  <div className="flex items-center space-x-1.5 bg-studio-800/50 px-2 py-1 rounded-md">
+                    <DollarSign className="w-3 h-3" />
+                    <span className="font-medium text-gray-300">{preset.costMultiplier}× cost</span>
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-1">
-                  <DollarSign className="w-3 h-3" />
-                  <span className="font-medium">{preset.costMultiplier}× cost</span>
+                {/* Quality indicator bars with animated gradient */}
+                <div className="flex space-x-1">
+                  {Array.from({ length: 5 }).map((_, i) => {
+                    const filled = i < Math.ceil((preset.steps / 75) * 5);
+                    return (
+                      <motion.div
+                        key={i}
+                        className={`h-2 flex-1 rounded-full transition-all duration-300 ${
+                          filled
+                            ? `bg-gradient-to-r ${barGradient}`
+                            : 'bg-studio-700'
+                        }`}
+                        initial={false}
+                        animate={isSelected && filled ? {
+                          boxShadow: ['0 0 0px rgba(124, 58, 237, 0)', '0 0 8px rgba(124, 58, 237, 0.5)', '0 0 0px rgba(124, 58, 237, 0)']
+                        } : {}}
+                        transition={{ duration: 2, repeat: Infinity, delay: i * 0.1 }}
+                      />
+                    );
+                  })}
                 </div>
               </div>
-
-              {/* Quality indicator bars with gradient */}
-              <div className="flex space-x-1">
-                {Array.from({ length: 5 }).map((_, i) => {
-                  const filled = i < Math.ceil((preset.steps / 75) * 5);
-                  return (
-                    <div
-                      key={i}
-                      className={`h-2 flex-1 rounded-full transition-all ${
-                        filled
-                          ? isSelected
-                            ? 'bg-gradient-to-r from-primary-400 to-primary-600'
-                            : 'bg-primary-500'
-                          : 'bg-gray-200'
-                      }`}
-                    />
-                  );
-                })}
-              </div>
-            </button>
+            </motion.button>
           );
         })}
-      </div>
+      </motion.div>
 
-      {/* Info Card */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 text-xs">
-        <p className="font-semibold text-blue-900 mb-2 flex items-center space-x-1">
-          <Star className="w-3 h-3" />
+      {/* Info Card - Dark Theme */}
+      <motion.div
+        className="bg-studio-800/50 border border-studio-700 rounded-xl p-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <p className="font-semibold text-gray-200 mb-3 flex items-center space-x-2">
+          <Info className="w-4 h-4 text-electric-blue-400" />
           <span>Quality Guide</span>
         </p>
-        <div className="space-y-1.5 text-blue-700">
-          <div className="flex items-start space-x-2">
-            <span className="text-yellow-600">⚡</span>
-            <p><strong>Draft:</strong> Fast preview for testing ideas</p>
+        <div className="space-y-2 text-xs">
+          <div className="flex items-start space-x-3 p-2 rounded-lg bg-studio-900/50 border border-studio-700/50">
+            <Zap className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <p className="text-studio-300">
+              <span className="font-semibold text-yellow-400">Draft:</span> Fast preview for testing ideas
+            </p>
           </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-green-600">✓</span>
-            <p><strong>Standard:</strong> Balanced quality and speed (recommended)</p>
+          <div className="flex items-start space-x-3 p-2 rounded-lg bg-studio-900/50 border border-green-500/20">
+            <Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+            <p className="text-studio-300">
+              <span className="font-semibold text-green-400">Standard:</span> Balanced quality and speed (recommended)
+            </p>
           </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-purple-600">★</span>
-            <p><strong>High/Ultra:</strong> Better details and photorealism</p>
+          <div className="flex items-start space-x-3 p-2 rounded-lg bg-studio-900/50 border border-studio-700/50">
+            <Star className="w-4 h-4 text-electric-purple-400 flex-shrink-0 mt-0.5" />
+            <p className="text-studio-300">
+              <span className="font-semibold text-electric-purple-400">High/Ultra:</span> Better details and photorealism
+            </p>
           </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-red-600">♦</span>
-            <p><strong>Maximum:</strong> Best quality, takes longer</p>
+          <div className="flex items-start space-x-3 p-2 rounded-lg bg-studio-900/50 border border-studio-700/50">
+            <Sparkles className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-studio-300">
+              <span className="font-semibold text-red-400">Maximum:</span> Best quality, takes longer
+            </p>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

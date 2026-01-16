@@ -16,23 +16,23 @@ export const GenerateButton: React.FC<GenerateButtonProps> = ({
       onClick={onClick}
       disabled={disabled || isGenerating}
       className={`
-        w-full py-4 rounded-lg font-medium text-white text-lg
-        transition-all duration-200 flex items-center justify-center space-x-2
+        w-full py-4 rounded-xl font-semibold text-white text-lg
+        transition-all duration-300 flex items-center justify-center space-x-2
         ${disabled || isGenerating
-          ? 'bg-gray-400 cursor-not-allowed text-gray-100'
-          : 'bg-gradient-to-r from-blue-600 to-purple-500 hover:from-blue-700 hover:to-purple-600 shadow-lg hover:shadow-xl'
+          ? 'bg-studio-700 cursor-not-allowed text-gray-400'
+          : 'bg-gradient-electric hover:scale-[1.02] shadow-glow hover:shadow-glow-lg'
         }
       `}
     >
       {isGenerating ? (
         <>
           <Loader2 className="w-6 h-6 animate-spin" />
-          <span className="font-semibold">Generating...</span>
+          <span className="font-bold">Generating Studio Photo...</span>
         </>
       ) : (
         <>
           <Sparkles className="w-6 h-6" />
-          <span className="font-semibold">Generate Image</span>
+          <span className="font-bold">Create My Studio Photo</span>
         </>
       )}
     </button>
