@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   Sparkles,
@@ -23,12 +24,25 @@ import {
   scrollRevealScale
 } from '../utils/animations';
 import { useInView, usePrefersReducedMotion } from '../hooks/useScrollAnimation';
+import { useAuthStore } from '@/stores/authStore';
 
 interface LandingPageProps {
-  onGetStarted: () => void;
+  onGetStarted?: () => void;
 }
 
 export function LandingPage({ onGetStarted }: LandingPageProps) {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
+
+  const handleGetStarted = () => {
+    if (onGetStarted) {
+      onGetStarted();
+    } else if (isAuthenticated) {
+      navigate('/app');
+    } else {
+      navigate('/signup');
+    }
+  };
   const [beforeAfterSlider, setBeforeAfterSlider] = useState(50);
   const [activeCategory, setActiveCategory] = useState('professional');
   const [imagesLoaded, setImagesLoaded] = useState({ before: false, after: false });
@@ -268,21 +282,29 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
 
             {/* CTAs */}
             <div className="flex items-center space-x-4">
-              <motion.button
-                className="hidden sm:block px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Sign In
-              </motion.button>
-              <motion.button
-                onClick={onGetStarted}
-                className="px-6 py-2.5 bg-gradient-electric text-white text-sm font-semibold rounded-lg shadow-glow hover:shadow-glow-lg transition-all duration-300"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Try Free Demo
-              </motion.button>
+              {isAuthenticated ? (
+                <Link
+                  to="/app"
+                  className="px-6 py-2.5 bg-gradient-electric text-white text-sm font-semibold rounded-lg shadow-glow hover:shadow-glow-lg transition-all duration-300"
+                >
+                  Go to App
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="hidden sm:block px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="px-6 py-2.5 bg-gradient-electric text-white text-sm font-semibold rounded-lg shadow-glow hover:shadow-glow-lg transition-all duration-300"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -377,7 +399,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 className="flex flex-col sm:flex-row gap-4"
               >
                 <motion.button
-                  onClick={onGetStarted}
+                  onClick={handleGetStarted}
                   className="group px-8 py-4 bg-gradient-electric text-white font-semibold rounded-xl shadow-glow hover:shadow-glow-lg transition-all duration-300 flex items-center justify-center space-x-2"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -742,7 +764,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                     y: -8,
                     boxShadow: '0 20px 60px rgba(124, 58, 237, 0.3)'
                   }}
-                  onClick={onGetStarted}
+                  onClick={handleGetStarted}
                 >
                   {/* Image Preview with Real Stock Photo */}
                   <div className="aspect-[4/5] bg-studio-900 relative overflow-hidden">
@@ -820,7 +842,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             transition={{ delay: 0.6 }}
           >
             <motion.button
-              onClick={onGetStarted}
+              onClick={handleGetStarted}
               className="px-8 py-4 bg-studio-850 text-white font-semibold rounded-xl border border-studio-700 hover:border-electric-purple-500 transition-all duration-300 inline-flex items-center space-x-2"
               whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(124, 58, 237, 0.3)' }}
               whileTap={{ scale: 0.95 }}
@@ -940,7 +962,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 Join over 1 million users who trust Studio AI for professional-quality portraits. No signup required to get started.
               </motion.p>
               <motion.button
-                onClick={onGetStarted}
+                onClick={handleGetStarted}
                 className="group px-10 py-5 bg-gradient-electric text-white text-lg font-bold rounded-xl shadow-glow-lg hover:shadow-glow transition-all duration-300 inline-flex items-center space-x-3"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

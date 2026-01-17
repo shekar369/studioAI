@@ -1,0 +1,265 @@
+// Studio AI Database Schema
+// Using Supabase PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Role {
+  GUEST
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  GITHUB
+}
+
+// ============================================
+// USERS & AUTHENTICATION
+// ============================================
+
+model User {
+  id              String       @id @default(uuid())
+  email           String       @unique
+  passwordHash    String?
+  role            Role         @default(USER)
+  authProvider    AuthProvider @default(EMAIL)
+  providerId      String?
+
+  // Email verification
+  emailVerified   Boolean      @default(false)
+  emailVerifiedAt DateTime?
+
+  // Account status
+  isActive        Boolean      @default(true)
+  isBanned        Boolean      @default(false)
+  bannedAt        DateTime?
+  bannedReason    String?
+
+  // Timestamps
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  lastLoginAt     DateTime?
+  loginCount      Int          @default(0)
+
+  // Relations
+  profile         Profile?
+  refreshTokens   RefreshToken[]
+  photos          Photo[]
+  apiKeys         APIKey[]
+  auditLogs       AuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Profile {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Personal info
+  firstName            String?
+  lastName             String?
+  displayName          String?
+  avatarUrl            String?
+  bio                  String?
+
+  // Preferences
+  preferredAPI         String?  @default("openai")
+  defaultQuality       String?  @default("standard")
+  notificationsEnabled Boolean  @default(true)
+  marketingEmails      Boolean  @default(false)
+
+  // Timestamps
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token      String   @unique
+  expiresAt  DateTime
+  deviceInfo String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model EmailVerification {
+  id        String    @id @default(uuid())
+  email     String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+  @@index([token])
+}
+
+model PasswordReset {
+  id        String    @id @default(uuid())
+  email     String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+  @@index([token])
+}
+
+// ============================================
+// PHOTOS & GENERATION
+// ============================================
+
+model Photo {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Image data
+  originalUrl     String
+  originalKey     String   // S3 storage key
+  generatedUrl    String?
+  generatedKey    String?
+  thumbnailUrl    String?
+
+  // Generation details
+  occasionId      String?
+  prompt          String?
+  negativePrompt  String?
+  apiUsed         String
+  modelUsed       String?
+  quality         String
+  width           Int?
+  height          Int?
+
+  // Metadata
+  generationTime  Int?     // milliseconds
+  fileSize        Int?     // bytes
+
+  // Status
+  status          String   @default("completed") // pending, processing, completed, failed
+  errorMessage    String?
+
+  // User organization
+  title           String?
+  isFavorite      Boolean  @default(false)
+  tags            String[]
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([isFavorite])
+}
+
+// ============================================
+// API KEYS MANAGEMENT (Admin)
+// ============================================
+
+model APIKey {
+  id           String    @id @default(uuid())
+  userId       String    // Admin who created it
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Key details
+  name         String    // e.g., "OpenAI Production"
+  provider     String    // openai, huggingface, gemini
+  encryptedKey String    // AES-256 encrypted
+  keyPreview   String?   // Last 4 chars for display
+
+  // Status
+  isActive     Boolean   @default(true)
+  isDefault    Boolean   @default(false)
+
+  // Usage tracking
+  usageCount   Int       @default(0)
+  lastUsedAt   DateTime?
+  monthlyLimit Int?
+
+  // Timestamps
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([provider])
+  @@index([isActive])
+  @@index([userId])
+}
+
+// ============================================
+// AUDIT & LOGGING
+// ============================================
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  action       String   // login, logout, generate, update_profile, admin_action, etc.
+  resource     String?  // user, photo, apiKey, etc.
+  resourceId   String?
+
+  // Request details
+  ipAddress    String?
+  userAgent    String?
+  method       String?  // GET, POST, etc.
+  path         String?
+
+  // Change tracking
+  previousData Json?
+  newData      Json?
+
+  // Status
+  status       String   @default("success") // success, failure
+  errorMessage String?
+
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([resource])
+}
+
+// ============================================
+// DEMO RATE LIMITING
+// ============================================
+
+model DemoUsage {
+  id        String   @id @default(uuid())
+  ipAddress String
+  count     Int      @default(1)
+  date      DateTime @default(now()) @db.Date
+
+  @@unique([ipAddress, date])
+  @@index([ipAddress])
+  @@index([date])
+}
